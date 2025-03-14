@@ -109,7 +109,3 @@ void showMenu(void){
     cout << "P : Print all elements in the queue." << endl;
     cout << "Q : Quit.\n" << endl;
 }
-
-void showHeap(void){
-    
-}
