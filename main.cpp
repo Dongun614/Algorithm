@@ -4,6 +4,8 @@
 //insert를 어떻게 짜면 될까
 //들어오면 element로 받아서
 //h -> heap[index]에 넣기
+//메뉴 입력받을때 라인으로 입력받아서 여백 지우는 것 필요
+//Insert할 때 Line으로 입력받는 것 필요
 
 #include <iostream>
 #include <cctype>
@@ -47,12 +49,19 @@ class Heap{
                 resize();
             }
             arr[size++] = e;
+            cout << "New element [" << e.name << ", " << e.score << ", " << e.className << "] has been inserted.\n" << endl;
+        }
+
+        void showHeap(){
+            cout << "Current queue elements:" << endl;
+            for(int i=1; i<size; i++){
+                cout << i << ". [" << arr[i].name << ", " << arr[i].score << ", " << arr[i].className << "]" << endl;
+            }
+            cout << endl;
         }
 };
 
 void showMenu(void);
-void heapInit(Heap* h);
-void insert(Heap* h, element e);
 
 int main (void){
     Heap h;
@@ -66,7 +75,14 @@ int main (void){
         cin >> choice;
 
         if(choice == "I" || choice == "i"){
-            cout << "I 입니다" << endl;
+            element e;
+            cout << "Enter the name of the student: ";
+            cin >> e.name;
+            cout << "Enter the score of the element: ";
+            cin >> e.score;
+            cout << "Enter the class name: ";
+            cin >> e.className;
+            h.insert(e);
         }else if(choice == "D" || choice == "d"){
             cout << "D 입니다" << endl;
         }else if(choice == "R" || choice == "r"){
@@ -74,7 +90,7 @@ int main (void){
         }else if(choice == "N" || choice == "n"){
             cout << "N 입니다" << endl;
         }else if(choice == "P" || choice == "p"){
-            cout << "P 입니다" << endl;
+            h.showHeap();
         }else if(choice == "Q" || choice == "q"){
             cout << "프로그램을 종료합니다." << endl;
             running = false;
@@ -92,4 +108,8 @@ void showMenu(void){
     cout << "N : Increase the kev of an element in the queue." << endl;
     cout << "P : Print all elements in the queue." << endl;
     cout << "Q : Quit.\n" << endl;
+}
+
+void showHeap(void){
+    
 }
