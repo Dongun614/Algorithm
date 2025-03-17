@@ -36,7 +36,7 @@ class Heap{
     public:
         Heap(){
             size = 1;
-            capacity = 1;
+            capacity = 2;
             arr = new element[capacity];
         }
 
@@ -48,8 +48,14 @@ class Heap{
             if(size == capacity){
                 resize();
             }
-            arr[size++] = e;
+            arr[size] = e;
+            heapifyUp(size);
+            size++;
             cout << "New element [" << e.name << ", " << e.score << ", " << e.className << "] has been inserted.\n" << endl;
+        }
+
+        void delete(){
+            
         }
 
         void showHeap(){
@@ -58,6 +64,17 @@ class Heap{
                 cout << i << ". [" << arr[i].name << ", " << arr[i].score << ", " << arr[i].className << "]" << endl;
             }
             cout << endl;
+        }
+
+        void heapifyUp(int index){
+            while(index > 1 && arr[index].score > arr[index/2].score){
+                swap(arr[index], arr[index/2]);
+                index /= 2;
+            }
+        }
+
+        element maxium(){
+            return arr[1];
         }
 };
 
