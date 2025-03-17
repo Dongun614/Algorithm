@@ -59,7 +59,7 @@ class Heap{
 
         element extractMax(){
             if(size <= 1){
-                cout << "Heap is empty" << endl;
+                cout << "Cannot delete from an empty queue." << endl;
                 return {"", -1, ""}; //빈 element 리턴하는데 점수에 -1을 넣어서 리턴
             }
             element maxNode = arr[1];
@@ -72,12 +72,20 @@ class Heap{
         }
 
         void retrieveMaxNode(){
+            if(size == 1){
+                cout << "Queue is empty." << endl;
+                return;
+            }
             element maxNode = maxium();
             cout << "Element with the largest key: [" << maxNode.name << ", " << maxNode.score << ", " << maxNode.className << "]" << endl;
             cout << endl;
         }
 
         void showHeap(){
+            if(size == 1){
+                cout << "Queue is empty." << endl;
+                return;
+            }
             cout << "Current queue elements:" << endl;
             for(int i=1; i<size; i++){
                 cout << i << ". [" << arr[i].name << ", " << arr[i].score << ", " << arr[i].className << "]" << endl;
@@ -114,12 +122,21 @@ class Heap{
         }
 
         void increaseKey(){
+            if(size == 1){
+                cout << "Queue is empty." << endl;
+                return;
+            }
             int index; // 사용자에게 받은 인덱스 값 저장하는 변수
             while(true){
                 cout << "Enter the index of the element: ";
                 cin >> index;
                 cin.ignore();
-                if(index < size){
+                if(index <= 0){
+                    cout << "Index is start by 1, try again.." << endl;
+                    continue;
+                }
+
+                if(index > 0 && index < size){
                     break;
                 }
                 cout << "Your input is out of size (size: " << size-1 << ")" << endl;
