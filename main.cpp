@@ -54,8 +54,22 @@ class Heap{
             cout << "New element [" << e.name << ", " << e.score << ", " << e.className << "] has been inserted.\n" << endl;
         }
 
-        void delete(){
-            
+        void deleteNode(){
+            if(size <= 1){
+                cout << "Heap is empty" << endl;
+                return;
+            }
+            element maxNode = maxium();
+            cout << "Deleted element: [" << maxNode.name << ", " << maxNode.score << ", " << maxNode.className << "]" << endl;
+            swap(maxNode, arr[size]);
+            size--;
+            heapifyDown(1);
+        }
+
+        void retrieveMaxNode(){
+            element maxNode = maxium();
+            cout << "Element with the largest key: [" << maxNode.name << ", " << maxNode.score << ", " << maxNode.className << "]" << endl;
+            cout << endl;
         }
 
         void showHeap(){
@@ -70,6 +84,23 @@ class Heap{
             while(index > 1 && arr[index].score > arr[index/2].score){
                 swap(arr[index], arr[index/2]);
                 index /= 2;
+            }
+        }
+
+        void heapifyDown(int index){
+            int largest = index;
+            int left = index * 2;
+            int right = index * 2 + 1;
+
+            if(left < size && arr[left].score > arr[largest].score){
+                largest = left;
+            }
+            if(right < size && arr[right].score > arr[largest].score){
+                largest = right;
+            }
+            if(largest != index){
+                swap(arr[index], arr[largest]);
+                heapifyDown(largest);
             }
         }
 
@@ -101,15 +132,15 @@ int main (void){
             cin >> e.className;
             h.insert(e);
         }else if(choice == "D" || choice == "d"){
-            cout << "D 입니다" << endl;
+            h.deleteNode();
         }else if(choice == "R" || choice == "r"){
-            cout << "R 입니다" << endl;
+            h.retrieveMaxNode();
         }else if(choice == "N" || choice == "n"){
             cout << "N 입니다" << endl;
         }else if(choice == "P" || choice == "p"){
             h.showHeap();
         }else if(choice == "Q" || choice == "q"){
-            cout << "프로그램을 종료합니다." << endl;
+            cout << "Program terminated." << endl;
             running = false;
         }else cout << "잘못된 입력입니다.\n" << endl;
     }
