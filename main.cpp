@@ -107,6 +107,32 @@ class Heap{
         element maxium(){
             return arr[1];
         }
+
+        void increseKey(){
+            int index; // 사용자에게 받은 인덱스 값 저장하는 변수
+            while(true){
+                cout << "Enter the index of the element: ";
+                cin >> index;
+                if(index < size){
+                    iRunning = false;
+                    break;
+                }
+                cout << "Your input is out of size (size: " << size-1 << ")" << endl;
+            }
+
+            int temp; // 사용자에게 받은 점수 임시로 저장할 변수
+            while(true){
+                cout << "Enter the new score: ";
+                cin >> temp;
+                if(temp > arr[index].score){
+                    arr[index].score = temp;
+                    break;
+                }
+                cout << "New score should be larger than current score. Please enter again." << endl;
+            }
+            cout << "Key updated. [" << arr[index].name << ", " << arr[index].score << ", " << arr[index].className << "]" << endl;
+            heapifyUp(index);
+        }
 };
 
 void showMenu(void);
@@ -136,7 +162,7 @@ int main (void){
         }else if(choice == "R" || choice == "r"){
             h.retrieveMaxNode();
         }else if(choice == "N" || choice == "n"){
-            cout << "N 입니다" << endl;
+            h.increseKey();
         }else if(choice == "P" || choice == "p"){
             h.showHeap();
         }else if(choice == "Q" || choice == "q"){
