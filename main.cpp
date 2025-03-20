@@ -1,5 +1,11 @@
 //22000712 조동운
 
+//Reference
+//Heap sort LMS 강의
+//Heap sort 강의 Slide 5-8p, 10p, 16p, 19p, 20p, 24-26p, 29-30p
+//Heap sort 강의 Slide 32p, 34-36p
+//Blog URL: https://kbj96.tistory.com/15
+
 #include <iostream>
 #include <cctype>
 #include <string>
