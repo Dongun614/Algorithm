@@ -166,6 +166,7 @@ class Heap{
 
 void showMenu(void);
 string trim(const string& str);
+int getValidatedScore(string msg);
 
 int main (void){
     Heap h;
@@ -183,16 +184,7 @@ int main (void){
             int temp;
             cout << "Enter the name of the student: ";
             getline(cin, e.name);
-            while(true){
-                cout << "Enter the score of the element: ";
-                cin >> temp;
-                cin.ignore();
-                if(temp >= 0 && temp <= 100){
-                    e.score = temp;
-                    break;
-                }
-                cout << "Invalid score. Please enter a valid integer between 0 and 100." << endl;
-            }
+            e.score = getValidatedScore("Enter the score of the element: ");
             cout << "Enter the class name: ";
             getline(cin, e.className);
             h.insert(e);
@@ -231,4 +223,23 @@ string trim(const string& str) {
     if (first == string::npos) return "";
     size_t last = str.find_last_not_of(" \t\n\r");
     return str.substr(first, last - first + 1);
+}
+
+int getValidatedScore(string msg) {
+    while (true) {
+        try {
+            string input;
+            cout << msg;
+            getline(cin, input);
+            int score = stoi(input);
+            if (score < 0 || score > 100) {
+                throw out_of_range("Invalid score. Please enter a valid integer between 0 and 100.");
+            }
+            return score;
+        } catch (const invalid_argument&) {
+            cout << "Invalid input. Please enter a valid integer." << endl;
+        } catch (const out_of_range& e) {
+            cout << e.what() << endl;
+        }
+    }
 }
