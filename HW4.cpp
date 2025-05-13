@@ -8,6 +8,8 @@ struct Item {
     int value;
 };
 
+void dynamicProgramming(const vector<Item>& items, int weight);
+
 int main(){
     vector<Item> items = {
         {2, 3},
@@ -16,10 +18,16 @@ int main(){
         {5, 6}
     };
 
+    dynamicProgramming(items, 5);
+
+
+
+    return 0;
+}
+
+void dynamicProgramming(const vector<Item>& items, int weight){
     int s = items.size();
-    int w = 5;
-    
-    cout << "s: " << s << "   w: " << w << endl;
+    int w = weight;
 
     int dp[w+1][s+1];
 
@@ -54,6 +62,4 @@ int main(){
             if(j==s) cout << endl;
         }
     }
-
-    return 0;
 }
