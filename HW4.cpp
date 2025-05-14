@@ -9,6 +9,7 @@ struct Item {
 };
 
 void dynamicProgramming(const vector<Item>& items, int weight);
+void greedyProgramming(const vector<Item>& items, int weight);
 
 int main(){
     vector<Item> items = {
@@ -19,7 +20,6 @@ int main(){
     };
 
     dynamicProgramming(items, 5);
-
 
 
     return 0;
@@ -62,4 +62,17 @@ void dynamicProgramming(const vector<Item>& items, int weight){
             if(j==s) cout << endl;
         }
     }
+}
+
+bool compare(struct Item a, struct Item b){
+    double r1 = (double)a.value / a.weight;
+    double r2 = (double)b.value / b.weight;
+    return r1 > r2;
+}
+
+void greedyProgramming(const vector<Item>& items, int weight){
+    int s = items.size();
+    int w = weight;
+
+    
 }
