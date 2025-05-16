@@ -1,68 +1,65 @@
-/*
-References:
-(1) Lecture slide chapter 6. page3-5
-(2) https://www.w3schools.com/dsa/dsa_ref_knapsack.php
-(3) https://www.digitalocean.com/community/tutorials/fractional-knapsack-cpp
-(4) https://www.sanfoundry.com/cpp-program-solve-knapsack-problem-using-dynamic-programming/
-(5) https://www.tutorialspoint.com/0-1-knapsack-using-branch-and-bound-in-c-cplusplus
-(6) https://www.programiz.com/cpp-programming/library-function/cstdlib/srand
-(7) ChatGPT, Gemini, Claude
-
-// Did not implement brute force for data size >= 31 due to exponential time.
-*/
+// knapsack_solver.cpp
+// References:
+// (1) Lecture slide chapter 6, page 3-5
+// (2) GeeksforGeeks: Knapsack implementations (Brute-force, DP, Greedy)
+// (3) Book: “Algorithm Design Manual” by Steven S. Skiena
+// (4) Hyperscale AI: ChatGPT (OpenAI), Claude
 
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <iomanip>
+#include <chrono>
 #include <queue>
-#include <ctime>
-#include <cstdlib>
+#include <random>
 using namespace std;
+using namespace chrono;
 
-// 랜덤 데이터 생성 함수
-void generateData(vector<int>& weights, vector<int>& values, int n) {
-    srand(100);
-    for (int i = 0; i < n; ++i) {
-        values[i] = 1 + rand() % 500;
-        weights[i] = 1 + rand() % 100;
-    }
-}
-
-// 1. Brute Force (재귀)
-int knapsackBruteForce(const vector<int>& weights, const vector<int>& values, int n, int W, int idx = 0) {
-    if (idx == n || W == 0) return 0;
-    if (weights[idx] > W)
-        return knapsackBruteForce(weights, values, n, W, idx + 1);
-    int included = values[idx] + knapsackBruteForce(weights, values, n, W - weights[idx], idx + 1);
-    int excluded = knapsackBruteForce(weights, values, n, W, idx + 1);
-    return max(included, excluded);
-}
-
-// 2. Greedy (Fractional Knapsack)
 struct Item {
     int value, weight;
     double ratio;
 };
-bool cmp(const Item& a, const Item& b) {
+
+bool compare(Item a, Item b) {
     return a.ratio > b.ratio;
 }
-double fractionalKnapsack(const vector<int>& weights, const vector<int>& values, int n, int W) {
-    vector<Item> items(n);
+
+void generateItems(vector<Item>& items, int n, int seed) {
+    mt19937 rng(seed);
+    uniform_int_distribution<int> valueDist(1, 500);
+    uniform_int_distribution<int> weightDist(1, 100);
+    items.clear();
     for (int i = 0; i < n; ++i) {
-        items[i].value = values[i];
-        items[i].weight = weights[i];
-        items[i].ratio = (double)values[i] / weights[i];
+        int value = valueDist(rng);
+        int weight = weightDist(rng);
+        items.push_back({value, weight, (double)value / weight});
     }
-    sort(items.begin(), items.end(), cmp);
+}
+
+// 1. Brute Force
+int knapsackBruteForceUtil(vector<Item>& items, int n, int W) {
+    if (n == 0 || W == 0) return 0;
+    if (items[n-1].weight > W)
+        return knapsackBruteForceUtil(items, n-1, W);
+    return max(
+        knapsackBruteForceUtil(items, n-1, W),
+        items[n-1].value + knapsackBruteForceUtil(items, n-1, W - items[n-1].weight)
+    );
+}
+
+int knapsackBruteForce(vector<Item>& items, int W) {
+    return knapsackBruteForceUtil(items, items.size(), W);
+}
+
+// 2. Greedy (Fractional)
+double knapsackGreedy(vector<Item> items, int W) {
+    sort(items.begin(), items.end(), compare);
     double totalValue = 0.0;
-    int capacity = W;
-    for (int i = 0; i < n && capacity > 0; ++i) {
-        if (items[i].weight <= capacity) {
-            totalValue += items[i].value;
-            capacity -= items[i].weight;
+    for (auto& item : items) {
+        if (W >= item.weight) {
+            W -= item.weight;
+            totalValue += item.value;
         } else {
-            totalValue += items[i].ratio * capacity;
+            totalValue += item.ratio * W;
             break;
         }
     }
@@ -70,14 +67,15 @@ double fractionalKnapsack(const vector<int>& weights, const vector<int>& values,
 }
 
 // 3. Dynamic Programming
-int knapsackDP(const vector<int>& weights, const vector<int>& values, int n, int W) {
-    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+int knapsackDP(vector<Item>& items, int W) {
+    int n = items.size();
+    vector<vector<int>> dp(n+1, vector<int>(W+1, 0));
     for (int i = 1; i <= n; ++i) {
         for (int w = 0; w <= W; ++w) {
-            if (weights[i - 1] > w)
-                dp[i][w] = dp[i - 1][w];
+            if (items[i-1].weight > w)
+                dp[i][w] = dp[i-1][w];
             else
-                dp[i][w] = max(dp[i - 1][w], values[i - 1] + dp[i - 1][w - weights[i - 1]]);
+                dp[i][w] = max(dp[i-1][w], items[i-1].value + dp[i-1][w - items[i-1].weight]);
         }
     }
     return dp[n][W];
@@ -87,118 +85,101 @@ int knapsackDP(const vector<int>& weights, const vector<int>& values, int n, int
 struct Node {
     int level, profit, weight;
     double bound;
-    bool operator<(const Node& other) const {
-        return bound < other.bound;
-    }
+    bool operator<(const Node& other) const { return bound < other.bound; }
 };
-double bound(const Node& u, int n, int W, const vector<Item>& items) {
+
+double bound(Node u, int n, int W, vector<Item>& items) {
     if (u.weight >= W) return 0;
-    double profit_bound = u.profit;
-    int j = u.level + 1, totweight = u.weight;
-    while (j < n && totweight + items[j].weight <= W) {
-        totweight += items[j].weight;
-        profit_bound += items[j].value;
+    double result = u.profit;
+    int j = u.level + 1;
+    int totalWeight = u.weight;
+    while (j < n && totalWeight + items[j].weight <= W) {
+        totalWeight += items[j].weight;
+        result += items[j].value;
         ++j;
     }
-    if (j < n)
-        profit_bound += (W - totweight) * items[j].ratio;
-    return profit_bound;
+    if (j < n) result += (W - totalWeight) * items[j].ratio;
+    return result;
 }
-int knapsackBnB(const vector<int>& weights, const vector<int>& values, int n, int W) {
-    vector<Item> items(n);
-    for (int i = 0; i < n; ++i) {
-        items[i].value = values[i];
-        items[i].weight = weights[i];
-        items[i].ratio = (double)values[i] / weights[i];
-    }
-    sort(items.begin(), items.end(), cmp);
-    queue<Node> Q;
+
+int knapsackBnB(vector<Item> items, int W) {
+    sort(items.begin(), items.end(), compare);
+    priority_queue<Node> Q;
     Node u, v;
     u.level = -1; u.profit = u.weight = 0;
-    u.bound = bound(u, n, W, items);
-    int maxProfit = 0;
+    u.bound = bound(u, items.size(), W, items);
     Q.push(u);
+    int maxProfit = 0;
+
     while (!Q.empty()) {
-        u = Q.front(); Q.pop();
-        if (u.level == n - 1) continue;
+        u = Q.top(); Q.pop();
+        if (u.bound <= maxProfit) continue;
+
         v.level = u.level + 1;
         v.weight = u.weight + items[v.level].weight;
         v.profit = u.profit + items[v.level].value;
         if (v.weight <= W && v.profit > maxProfit)
             maxProfit = v.profit;
-        v.bound = bound(v, n, W, items);
-        if (v.bound > maxProfit)
-            Q.push(v);
+        v.bound = bound(v, items.size(), W, items);
+        if (v.bound > maxProfit) Q.push(v);
+
         v.weight = u.weight;
         v.profit = u.profit;
-        v.bound = bound(v, n, W, items);
-        if (v.bound > maxProfit)
-            Q.push(v);
+        v.bound = bound(v, items.size(), W, items);
+        if (v.bound > maxProfit) Q.push(v);
     }
+
     return maxProfit;
 }
 
-// 시간 측정용 함수
-long long getTimeMs() {
-    return static_cast<long long>(clock()) * 1000 / CLOCKS_PER_SEC;
+void runTest(int n) {
+    vector<Item> items;
+    generateItems(items, n, 100);
+    int capacity = n * 25;
+
+    cout << "Number of Items: " << n << endl;
+
+    if (n <= 31) {
+        auto start = high_resolution_clock::now();
+        int res = knapsackBruteForce(items, capacity);
+        auto end = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(end - start).count();
+        cout << "Brute Force: " << duration << " ms / " << res << endl;
+    } else {
+        cout << "Brute Force: Skipped for n > 31" << endl;
+    }
+
+    // Greedy
+    generateItems(items, n, 100);
+    auto start = high_resolution_clock::now();
+    double greedyVal = knapsackGreedy(items, capacity);
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(end - start).count();
+    cout << "Greedy: " << duration << " ms / " << greedyVal << endl;
+
+    // DP
+    generateItems(items, n, 100);
+    start = high_resolution_clock::now();
+    int dpVal = knapsackDP(items, capacity);
+    end = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(end - start).count();
+    cout << "DP: " << duration << " ms / " << dpVal << endl;
+
+    // BnB
+    generateItems(items, n, 100);
+    start = high_resolution_clock::now();
+    int bnbVal = knapsackBnB(items, capacity);
+    end = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(end - start).count();
+    cout << "BnB: " << duration << " ms / " << bnbVal << endl;
+
+    cout << "----------------------------------" << endl;
 }
 
 int main() {
-    // Brute Force: 11, 21, 31개 아이템
-    vector<int> test_sizes_brute = {11, 21, 31};
-    cout << "| Number of Items | Processing time in ms / Maximum benefit value |\n";
-    cout << "|-----------------|------------------------------------------------|\n";
-    for (int n : test_sizes_brute) {
-        vector<int> weights(n), values(n);
-        generateData(weights, values, n);
-        int W = n * 25;
-        long long t1 = getTimeMs();
-        int maxVal = 0;
-        if (n <= 21) { // 31개는 시간 초과 가능성 높음
-            maxVal = knapsackBruteForce(weights, values, n, W);
-        }
-        long long t2 = getTimeMs();
-        if (n <= 21)
-            cout << "| " << setw(15) << n << " | " << fixed << setprecision(2)
-                 << (t2 - t1) << " / " << maxVal << " |\n";
-        else
-            cout << "| " << setw(15) << n << " | N/A (too slow) |\n";
-    }
-
-    // Greedy/DP/BnB: 10, 100, 1000, 10000개 아이템
-    vector<int> test_sizes = {10, 100, 1000, 10000};
-    cout << "\n| Number of Items | Greedy (ms/max) | D.P. (ms/max) | B&B (ms/max) |\n";
-    cout << "|-----------------|-----------------|---------------|--------------|\n";
-    for (int n : test_sizes) {
-        vector<int> weights(n), values(n);
-        generateData(weights, values, n);
-        int W = n * 25;
-
-        // Greedy
-        long long t1 = getTimeMs();
-        double greedyVal = fractionalKnapsack(weights, values, n, W);
-        long long t2 = getTimeMs();
-
-        // DP
-        long long t3 = getTimeMs();
-        int dpVal = knapsackDP(weights, values, n, W);
-        long long t4 = getTimeMs();
-
-        // Branch and Bound
-        long long t5 = getTimeMs();
-        int bnbVal = 0;
-        if (n <= 1000) // 10000개는 BnB 시간 초과 가능성
-            bnbVal = knapsackBnB(weights, values, n, W);
-        long long t6 = getTimeMs();
-
-        cout << "| " << setw(15) << n
-             << " | " << setw(7) << (t2 - t1) << " / " << setw(7) << (int)greedyVal
-             << " | " << setw(5) << (t4 - t3) << " / " << setw(7) << dpVal
-             << " | ";
-        if (n <= 1000)
-            cout << setw(5) << (t6 - t5) << " / " << setw(7) << bnbVal << " |\n";
-        else
-            cout << "N/A      |\n";
+    vector<int> sizes = {11, 21, 31, 10, 100, 1000, 10000};
+    for (int n : sizes) {
+        runTest(n);
     }
     return 0;
 }
