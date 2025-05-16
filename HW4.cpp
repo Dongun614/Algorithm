@@ -74,5 +74,6 @@ void greedyProgramming(const vector<Item>& items, int weight){
     int s = items.size();
     int w = weight;
 
+    sort(items.begin(), items.end(), compare);
     
 }
