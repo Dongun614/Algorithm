@@ -1,10 +1,26 @@
+/*
+22000712 조동운
+
+References:
+(1) week_9_midterm_ch22_up.pdf
+(2) https://www.geeksforgeeks.org/c-program-for-the-fractional-knapsack-problem/
+(3) https://www.w3schools.com/dsa/dsa_ref_knapsack.php
+(4) https://www.digitalocean.com/community/tutorials/fractional-knapsack-cpp
+(5) https://www.sanfoundry.com/cpp-program-solve-knapsack-problem-using-dynamic-programming/
+(6) https://www.tutorialspoint.com/0-1-knapsack-using-branch-and-bound-in-c-cplusplus
+(7) https://www.programiz.com/cpp-programming/library-function/cstdlib/srand
+*/
+
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <cstdlib>  
+#include <cstdlib> 
 #include <ctime>    
+#include <chrono>
+#include <iomanip> 
 
 using namespace std;
+using namespace std::chrono;
 
 struct Item {
     int weight;
@@ -18,12 +34,12 @@ struct Node {
 };
 
 void randomItems(vector<Item>& items, int n, int seed) {
-    srand(seed); // 고정된 시드로 같은 난수 생성
+    srand(seed); 
 
     items.clear();
     for (int i = 0; i < n; ++i) {
-        int value = rand() % 500 + 1;   // 1 ~ 500
-        int weight = rand() % 100 + 1;  // 1 ~ 100
+        int value = rand() % 500 + 1;  
+        int weight = rand() % 100 + 1;
         items.push_back({weight, value});
     }
 }
@@ -34,23 +50,66 @@ int bruteForceProgramming(vector<Item>& items, int weight, int idx = 0);
 int branchAndBoundProgramming(vector<Item>& items, int weight);
 
 int main(){
-    vector<Item> items = {
-        {2, 3},
-        {3, 4},
-        {4, 5},
-        {5, 6}
-    };
+    int forBrute[] = {11, 21, 31}; 
+    int forOther[] = {10, 100, 1000, 10000}; 
 
-    int retDP = dynamicProgramming(items, 5);
-    double retGreedy = greedyProgramming(items, 5);
-    int retBrute = bruteForceProgramming(items, 5);
-    int retBranch = branchAndBoundProgramming(items, 5);
+    int retBrute;
+    int retDP;
+    int retGreedy;
+    int retBranch;
 
-    cout << "DP 결과 : " << retDP << endl;
-    cout << "Greedy 결과 : " << retGreedy << endl;
-    cout << "Brute Force 결과 : " << retBrute << endl;
-    cout << "Branch and Bound 결과 : " << retBranch << endl;
+    cout << "[1] Brute Force (Processing Time (ms) / Maximum benefit)" << endl;
+    cout << "Number of Items\tBrute Force" << endl;
 
+
+    //forBrute[]에 있는 값들 주면서 bruteforce에서 각각 걸리는 시간과 maximum benefit value 구하기
+    for(int i : forBrute){
+        vector<Item> items;
+        cout << i << "\t\t";
+        randomItems(items, i, 100);
+        int capacity = i * 25;
+        // retBrute = bruteForceProgramming(items, capacity);
+
+        auto start = high_resolution_clock::now();
+        int result = bruteForceProgramming(items, capacity);
+        auto end = high_resolution_clock::now();
+        double ms = duration_cast<microseconds>(end - start).count() / 1000.0;
+
+        cout << fixed << setprecision(2) << ms << " / " << result << "\t" << endl;
+    }
+
+    cout << "\n[2] Greedy / D.P. / B. & B. (Processing Time(ms) / Maximum benefit)" << endl;
+    cout << "Number of Items \tGreedy" << setw(30) << "DP" << setw(33) << "B&B" << endl;
+
+    //forOther[]에 있는 값들 주면서 bruteforce를 제외한 나머지 알고리즘들에서 걸리는 시간과 maximum benefit value 구하기 
+    for (int i : forOther) {
+    int capacity = i * 25;
+        vector<Item> items;
+    randomItems(items, i, 100);
+
+    cout << i << "\t\t";
+
+    // Greedy
+    auto start = high_resolution_clock::now();
+    double greedy = greedyProgramming(items, capacity);
+    auto end = high_resolution_clock::now();
+    double msGreedy = duration_cast<microseconds>(end - start).count() / 1000.0;
+    cout << fixed << setprecision(2) << setw(10) << msGreedy << " / " << (int)greedy << "\t\t";
+
+    //DP
+    start = high_resolution_clock::now();
+    int dp = dynamicProgramming(items, capacity);
+    end = high_resolution_clock::now();
+    double msDP = duration_cast<microseconds>(end - start).count() / 1000.0;
+    cout << fixed << setprecision(2) << setw(10) << msDP << " / " << dp << "\t\t";
+
+    // // B&B
+    start = high_resolution_clock::now();
+    int bb = branchAndBoundProgramming(items, capacity);
+    end = high_resolution_clock::now();
+    double msBB = duration_cast<microseconds>(end - start).count() / 1000.0;
+    cout << fixed << setprecision(2) << setw(10) << msBB << " / " << bb << endl;
+}
 
     return 0;
 }
@@ -60,7 +119,7 @@ int dynamicProgramming(vector<Item>& items, int weight){
     int s = items.size();
     int w = weight;
 
-    int dp[w+1][s+1];
+    vector<vector<int>> dp(w + 1, vector<int>(s + 1, 0));
 
     for(int i=0; i<=w; i++){
         for(int j=0; j<=s; j++){
@@ -69,19 +128,15 @@ int dynamicProgramming(vector<Item>& items, int weight){
     }
 
     // 작성 과정
-    for(int j=1; j<=s; j++){ 
-        int current_w = items[j-1].weight;
-        int current_b = items[j-1].value;
-        
-        for(int i=0; i<=w; i++){ 
-            if(current_w <= i){ 
-                if(current_b + dp[i-current_w][j-1] > dp[i][j-1]){
-                    dp[i][j] = current_b + dp[i-current_w][j-1];
-                } else {
-                    dp[i][j] = dp[i][j-1];
-                }
-            } else { 
-                dp[i][j] = dp[i][j-1];
+    for (int j = 1; j <= s; j++) {
+        int current_w = items[j - 1].weight;
+        int current_b = items[j - 1].value;
+
+        for (int i = 0; i <= w; i++) {
+            if (current_w <= i) {
+                dp[i][j] = max(current_b + dp[i - current_w][j - 1], dp[i][j - 1]);
+            } else {
+                dp[i][j] = dp[i][j - 1];
             }
         }
     }
@@ -111,7 +166,7 @@ double greedyProgramming(vector<Item>& items, int weight){
             w -= items[i].weight;
         }
         else{
-            totalValue += items[i].value / items[i].weight * w;
+            totalValue += ((double)items[i].value / items[i].weight) * w;
             break;
         }
     }
