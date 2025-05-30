@@ -1,107 +1,132 @@
-// Lecture slide chapter 16.
-// Book: "Algorithm analysis in C++" by Mark Allen Weiss
-
 #include <iostream>
 #include <vector>
+#include <list>
 #include <map>
-#include <algorithm>
-#include <stack>
-#include <string>
-
+#include <stdexcept>
 using namespace std;
+
+enum class Color { WHITE, GRAY, BLACK };
 
 class Graph {
 private:
-    map<string, vector<string>> adj; // 인접 리스트 (알파벳 순서 보장)
-    map<string, bool> visited;
-    map<string, int> startTime;
-    map<string, int> finishTime;
-    vector<string> topoOrder;
+    vector<char> nodeLabels;
+    map<char, int> labelIndex;
+    vector<list<char>> adj;
+    vector<Color> color;
+    vector<int> discoveryTime;
+    vector<int> finishTime;
     int time;
+
+    void DFS_VISIT(int u) {
+        color[u] = Color::GRAY;
+        discoveryTime[u] = ++time;
+
+        for (char v_label : adj[u]) {
+            auto it = labelIndex.find(v_label);
+            if (it == labelIndex.end()) continue;
+            
+            int v = it->second;
+            if (color[v] == Color::WHITE) {
+                DFS_VISIT(v);
+            }
+        }
+
+        color[u] = Color::BLACK;
+        finishTime[u] = ++time;
+    }
 
 public:
     Graph() : time(0) {}
 
-    void addVertex(const string& v) {
-        if (adj.find(v) == adj.end()) {
-            adj[v] = vector<string>();
+    void addVertex(char label) {
+        if (labelIndex.count(label)) {
+            cerr << "Vertex " << label << " already exists." << endl;
+            return;
         }
+        nodeLabels.push_back(label);
+        adj.push_back(list<char>());
+        labelIndex[label] = nodeLabels.size() - 1;
     }
 
-    void addEdge(const string& u, const string& v) {
-        addVertex(u);
-        addVertex(v);
-        adj[u].push_back(v);
-        sort(adj[u].begin(), adj[u].end()); // 알파벳 순서 정렬
+    void addEdge(char src, char dest) {
+        if (!labelIndex.count(src) || !labelIndex.count(dest)) {
+            cerr << "Invalid edge: " << src << "->" << dest << endl;
+            return;
+        }
+        adj[labelIndex[src]].push_front(dest);
     }
 
-    void dfsAll() {
-        visited.clear();
-        startTime.clear();
-        finishTime.clear();
-        topoOrder.clear();
+    void DFS() {
+        color.assign(nodeLabels.size(), Color::WHITE);
+        discoveryTime.assign(nodeLabels.size(), -1);
+        finishTime.assign(nodeLabels.size(), -1);
         time = 0;
 
-        for (const auto& pair : adj) {
-            visited[pair.first] = false;
-        }
-
-        for (const auto& pair : adj) {
-            if (!visited[pair.first]) {
-                dfs(pair.first);
+        for (int i = 0; i < nodeLabels.size(); ++i) {
+            if (color[i] == Color::WHITE) {
+                DFS_VISIT(i);
             }
         }
     }
 
-    void dfs(const string& u) {
-        visited[u] = true;
-        startTime[u] = ++time;
-        for (const string& v : adj[u]) {
-            if (!visited[v]) {
-                dfs(v);
+    void printGraph() const {
+        cout << "Adjacency List:\n";
+        for (size_t i = 0; i < nodeLabels.size(); ++i) {
+            cout << nodeLabels[i] << ": ";
+            for (char neighbor : adj[i]) {
+                cout << neighbor << " -> ";
             }
-        }
-        finishTime[u] = ++time;
-        topoOrder.push_back(u); // 종료 시 스택에 push
-    }
-
-    void printTimes() const {
-        cout << "Vertex\tStart\tFinish\n";
-        for (const auto& pair : startTime) {
-            cout << pair.first << "\t" << pair.second << "\t" << finishTime.at(pair.first) << "\n";
+            cout << "NULL\n";
         }
     }
 
-    void printTopologicalOrder() const {
-        cout << "Topological Ordering: ";
-        for (auto it = topoOrder.rbegin(); it != topoOrder.rend(); ++it) {
-            cout << *it;
-            if (it + 1 != topoOrder.rend()) cout << " -> ";
-        }
-        cout << endl;
+    // Getter methods for DFS results
+    int getDiscoveryTime(char label) const {
+        if (!labelIndex.count(label)) throw invalid_argument("Invalid label");
+        return discoveryTime[labelIndex.at(label)];
     }
+
+    int getFinishTime(char label) const {
+        if (!labelIndex.count(label)) throw invalid_argument("Invalid label");
+        return finishTime[labelIndex.at(label)];
+    }
+
+    vector<char> getLabels() const { return nodeLabels; }
 };
 
 int main() {
     Graph g;
+    int size;
 
-    // 예시 그래프 (이미지 참고, A~F)
-    g.addEdge("A", "C");
-    g.addEdge("A", "D");
-    g.addEdge("B", "D");
-    g.addEdge("B", "E");
-    g.addEdge("C", "F");
-    g.addEdge("D", "F");
-    g.addEdge("E", "F");
+    cout << "Enter the number of nodes: ";
+    cin >> size;
 
-    // DFS 및 위상 정렬
-    g.dfsAll();
+    for (int i = 0; i < size; ++i) {
+        g.addVertex('A' + i);
+    }
 
-    // 결과 출력
-    cout << "=== DFS Start/Finish Times ===\n";
-    g.printTimes();
-    cout << "\n=== Topological Sort ===\n";
-    g.printTopologicalOrder();
+    // Add edges from original C code example
+    g.addEdge('A', 'H');
+    g.addEdge('B', 'A');
+    g.addEdge('B', 'D');
+    g.addEdge('B', 'F');
+    g.addEdge('C', 'D');
+    g.addEdge('C', 'F');
+    g.addEdge('D', 'A');
+    g.addEdge('D', 'G');
+    g.addEdge('D', 'H');
+    g.addEdge('D', 'I');
+    g.addEdge('E', 'I');
+
+    g.printGraph();
+    g.DFS();
+
+    cout << "\nDFS Results:\n";
+    for (char label : g.getLabels()) {
+        cout << "Vertex " << label << ": "
+             << "Discovery=" << g.getDiscoveryTime(label)
+             << ", Finish=" << g.getFinishTime(label) << endl;
+    }
 
     return 0;
 }
