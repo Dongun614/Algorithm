@@ -1,4 +1,18 @@
+/*
+22000712 조동운
+
+References:
+(1) 강의 슬라이드 - 7. ch22
+(2) https://blog.naver.com/ndb796/221227975229
+(3) https://itguava.tistory.com/67
+(4) https://m42-orion.tistory.com/65#%E2%AD%90%EF%B8%8F%20Code-1
+(5) https://better-tomorrow.tistory.com/entry/DFS-BFS-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0
+(6) https://m42-orion.tistory.com/63
+(7) https://wannadev.tistory.com/96
+*/
+
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -123,7 +137,7 @@ void DFS(Graph* graph, COLOR color[], int* time, int d[], int f[]) {
         d[i] = -1;
         f[i] = -1;
     }
-    *time = -1;
+    *time = 0;
     for (int i = 0; i < graph->numVertices; i++) {
         if (color[i] == WHITE) {
             DFS_VISIT(graph, i, color, time, d, f);
@@ -131,9 +145,12 @@ void DFS(Graph* graph, COLOR color[], int* time, int d[], int f[]) {
     }
 }
 
+bool compare(const pair<char, int>& a, const pair<char, int>& b) {
+    return a.second > b.second; 
+}
+
 
 int main() {
-
     int size;
     Graph* graph = createGraph();
     printf("Enter the number of nodes: ");
@@ -175,6 +192,17 @@ int main() {
         printf("\n");
     }
 
+    vector<pair<char, int>> nodes;
+    for (int i = 0; i < graph->numVertices; ++i) {
+        nodes.push_back({graph->nodeLabels[i], f[i]});
+    }
+
+    printf("\nTopological Results:\n");
+    sort(nodes.begin(), nodes.end(), compare);
+    for(auto& i : nodes ){
+        printf("%c ", i.first);
+    }
+    printf("\n");
 
     freeGraph(graph);
 
