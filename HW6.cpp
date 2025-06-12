@@ -1,7 +1,10 @@
 // homework6.cpp
 // References:
-// (1) 강의 slide chapter 16.
-// (2) Book: “Algorithm Design Manual” by Steven S. Skiena
+// (1) 강의 slide: chapter 24-25
+// (2) https://velog.io/@gks970113-woo/CC-stringstream-%EC%82%AC%EC%9A%A9%EB%B2%95
+// (3) https://yabmoons.tistory.com/364
+// (4) https://ansohxxn.github.io/algorithm/floyd/
+
 
 #include <iostream>
 #include <fstream>
@@ -58,23 +61,23 @@ void readGraph(const string &filename) {
 }
 
 void printTable(const vector<vector<int>>& dist) {
-    const int cellWidth = 10;
+    const int width = 10;
 
     // 헤더 출력
-    cout << left << setw(cellWidth) << "";
+    cout << left << setw(width) << "";
     for (const auto& name : cityNames) {
-        cout << left << setw(cellWidth) << name;
+        cout << left << setw(width) << name;
     }
     cout << "\n";
 
     // 거리 행렬 출력
     for (int i = 0; i < numVertices; ++i) {
-        cout << left << setw(cellWidth) << cityNames[i];
+        cout << left << setw(width) << cityNames[i];
         for (int j = 0; j < numVertices; ++j) {
             if (dist[i][j] == INF)
-                cout << left << setw(cellWidth) << "INF";
+                cout << left << setw(width) << "INF";
             else
-                cout << left << setw(cellWidth) << dist[i][j];
+                cout << left << setw(width) << dist[i][j];
         }
         cout << "\n";
     }
