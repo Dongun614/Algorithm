@@ -5,6 +5,7 @@
         "vector": "cpp",
         "iosfwd": "cpp",
         "ios": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "algorithm": "cpp"
     },
 }
