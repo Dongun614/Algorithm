@@ -58,21 +58,28 @@ void readGraph(const string &filename) {
 }
 
 void printTable(const vector<vector<int>>& dist) {
-    cout << "\t";
+    const int cellWidth = 10;
+
+    // 헤더 출력
+    cout << left << setw(cellWidth) << "";
     for (const auto& name : cityNames) {
-        cout << name << "\t";
+        cout << left << setw(cellWidth) << name;
     }
     cout << "\n";
 
+    // 거리 행렬 출력
     for (int i = 0; i < numVertices; ++i) {
-        cout << cityNames[i] << "\t";
+        cout << left << setw(cellWidth) << cityNames[i];
         for (int j = 0; j < numVertices; ++j) {
-            if (dist[i][j] == INF) cout << "INF\t";
-            else cout << dist[i][j] << "\t";
+            if (dist[i][j] == INF)
+                cout << left << setw(cellWidth) << "INF";
+            else
+                cout << left << setw(cellWidth) << dist[i][j];
         }
         cout << "\n";
     }
 }
+
 
 void dijkstraAllPairs() {
     cout << "1) The shortest distance between cities using Dijkstra's algorithm is:\n";
