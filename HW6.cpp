@@ -4,7 +4,8 @@
 // (2) https://velog.io/@gks970113-woo/CC-stringstream-%EC%82%AC%EC%9A%A9%EB%B2%95
 // (3) https://yabmoons.tistory.com/364
 // (4) https://ansohxxn.github.io/algorithm/floyd/
-
+// (5) https://musket-ade.tistory.com/entry/C-%EC%98%88%EC%99%B8%EC%B2%98%EB%A6%AC-%EB%A9%94%EC%BB%A4%EB%8B%88%EC%A6%98-try-catch-throw-%EC%B4%9D-%EC%A0%95%EB%A6%AC
+// (6) https://huilife.tistory.com/20
 
 #include <iostream>
 #include <fstream>
@@ -17,14 +18,29 @@
 
 using namespace std;
 
-const int INF = 1e9;
-const int MAX_V = 20;
+const int INF = INT_MAX;
+const int MAX_VERTICE = 20;
 
 int numVertices;
-vector<string> cityNames;
-vector<vector<int>> adjMatrix;
+vector<string> city;
+vector<vector<int>> matrix;
 
-void readGraph(const string &filename) {
+void readFile(const string &filename);
+void printFormat(const vector<vector<int>>& dist);
+void dijkstra();
+void floydWarshall();
+
+int main() {
+    readFile("homework6.data");
+
+    cout << fixed << setprecision(0);
+    dijkstra();
+    floydWarshall();
+
+    return 0;
+}
+
+void readFile(const string &filename) {
     ifstream file(filename);
     string line;
 
@@ -33,13 +49,10 @@ void readGraph(const string &filename) {
         string token;
         vector<int> row;
 
-        // 도시 이름 읽기
         getline(ss, token, '\t');
-        cityNames.push_back(token);
+        city.push_back(token);
 
-        // 거리값 읽기
         while (getline(ss, token, '\t')) {
-            // trim
             token.erase(0, token.find_first_not_of(" \r\n"));
             token.erase(token.find_last_not_of(" \r\n") + 1);
 
@@ -49,30 +62,28 @@ void readGraph(const string &filename) {
                 try {
                     row.push_back(stoi(token));
                 } catch (...) {
-                    cerr << "잘못된 거리값: '" << token << "'\n";
+                    cerr << "잘못된 거리값입니다\n";
                     row.push_back(INF);
                 }
             }
         }
-        adjMatrix.push_back(row);
+        matrix.push_back(row);
     }
 
-    numVertices = adjMatrix.size();
+    numVertices = matrix.size();
 }
 
-void printTable(const vector<vector<int>>& dist) {
+void printFormat(const vector<vector<int>>& dist) {
     const int width = 10;
 
-    // 헤더 출력
     cout << left << setw(width) << "";
-    for (const auto& name : cityNames) {
+    for (const auto& name : city) {
         cout << left << setw(width) << name;
     }
     cout << "\n";
 
-    // 거리 행렬 출력
     for (int i = 0; i < numVertices; ++i) {
-        cout << left << setw(width) << cityNames[i];
+        cout << left << setw(width) << city[i];
         for (int j = 0; j < numVertices; ++j) {
             if (dist[i][j] == INF)
                 cout << left << setw(width) << "INF";
@@ -84,8 +95,8 @@ void printTable(const vector<vector<int>>& dist) {
 }
 
 
-void dijkstraAllPairs() {
-    cout << "1) The shortest distance between cities using Dijkstra's algorithm is:\n";
+void dijkstra() {
+    cout << "1) Dijkstra's algorithm:\n\n";
 
     vector<vector<int>> allDist(numVertices, vector<int>(numVertices, INF));
 
@@ -104,8 +115,8 @@ void dijkstraAllPairs() {
             if (d > dist[u]) continue;
 
             for (int v = 0; v < numVertices; ++v) {
-                if (adjMatrix[u][v] != INF && dist[v] > dist[u] + adjMatrix[u][v]) {
-                    dist[v] = dist[u] + adjMatrix[u][v];
+                if (matrix[u][v] != INF && dist[v] > dist[u] + matrix[u][v]) {
+                    dist[v] = dist[u] + matrix[u][v];
                     pq.push({dist[v], v});
                 }
             }
@@ -113,12 +124,12 @@ void dijkstraAllPairs() {
         allDist[src] = dist;
     }
 
-    printTable(allDist);
+    printFormat(allDist);
 }
 
 void floydWarshall() {
-    cout << "\n2) The shortest distance between cities using Floyd's algorithm is:\n";
-    vector<vector<int>> dist = adjMatrix;
+    cout << "\n2) Floyd-Warshall algorithm:\n\n";
+    vector<vector<int>> dist = matrix;
 
     for (int k = 0; k < numVertices; ++k) {
         for (int i = 0; i < numVertices; ++i) {
@@ -129,15 +140,5 @@ void floydWarshall() {
         }
     }
 
-    printTable(dist);
-}
-
-int main() {
-    readGraph("homework6.data");
-
-    cout << fixed << setprecision(0);
-    dijkstraAllPairs();
-    floydWarshall();
-
-    return 0;
+    printFormat(dist);
 }
