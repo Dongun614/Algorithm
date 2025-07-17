@@ -6,7 +6,7 @@
 // (4) https://ansohxxn.github.io/algorithm/floyd/
 // (5) https://musket-ade.tistory.com/entry/C-%EC%98%88%EC%99%B8%EC%B2%98%EB%A6%AC-%EB%A9%94%EC%BB%A4%EB%8B%88%EC%A6%98-try-catch-throw-%EC%B4%9D-%EC%A0%95%EB%A6%AC
 // (6) https://huilife.tistory.com/20
-//
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
